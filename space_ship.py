@@ -1,4 +1,6 @@
-# http://www.codeskulptor.org/#user38_xE2LOCfokU_1.py
+#coding:utf-8
+
+# http://www.codeskulptor.org/#user38_xE2LOCfokU_8.py
 # program template for Spaceship
 import simplegui
 import math
@@ -174,6 +176,7 @@ class Sprite:
            
 def draw(canvas):
     global time
+    global lives
     
     # animiate background
     time += 1
@@ -183,6 +186,8 @@ def draw(canvas):
     canvas.draw_image(nebula_image, nebula_info.get_center(), nebula_info.get_size(), [WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT])
     canvas.draw_image(debris_image, center, size, (wtime - WIDTH / 2, HEIGHT / 2), (WIDTH, HEIGHT))
     canvas.draw_image(debris_image, center, size, (wtime + WIDTH / 2, HEIGHT / 2), (WIDTH, HEIGHT))
+    canvas.draw_text('LIFE:'+str(lives), [30,60], 25, 'white')
+    canvas.draw_text('SCORE:'+str(score), [600,60], 25, 'white')
 
     # draw ship and sprites
     my_ship.draw(canvas)
@@ -261,7 +266,7 @@ frame = simplegui.create_frame("Asteroids", WIDTH, HEIGHT)
 # initialize ship and two sprites
 my_ship = Ship([WIDTH / 2, HEIGHT / 2], [0, 0], 0, ship_image, ship_info)
 a_rock = Sprite([WIDTH / 3, HEIGHT / 3], [1, 1], 0, 0.1, asteroid_image, asteroid_info)
-a_missile = Sprite([2 * WIDTH / 3, 2 * HEIGHT / 3], [-1,1], 0, 0, missile_image, missile_info, missile_sound)
+a_missile = Sprite([-1,-1], [0,0], 0, 0, missile_image, missile_info, missile_sound)
 
 # register handlers
 frame.set_draw_handler(draw)
