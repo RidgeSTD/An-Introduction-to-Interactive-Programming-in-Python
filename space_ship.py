@@ -1,3 +1,4 @@
+# http://www.codeskulptor.org/#user38_xE2LOCfokU_1.py
 # program template for Spaceship
 import simplegui
 import math
@@ -9,6 +10,10 @@ HEIGHT = 600
 score = 0
 lives = 3
 time = 0.5
+acceleration = 0.3
+rotate_speed = 0.1
+retard_ratio = 0.1
+friction_ratio = 0.02
 
 class ImageInfo:
     def __init__(self, center, size, radius = 0, lifespan = None, animated = False):
@@ -77,6 +82,7 @@ explosion_sound = simplegui.load_sound("http://commondatastorage.googleapis.com/
 
 # helper functions to handle transformations
 def angle_to_vector(ang):
+    # print('get cos='+str(math.cos(ang))+' sin='+str(math.sin(ang)))
     return [math.cos(ang), math.sin(ang)]
 
 def dist(p,q):
@@ -89,6 +95,7 @@ class Ship:
         self.pos = [pos[0],pos[1]]
         self.vel = [vel[0],vel[1]]
         self.thrust = False
+        self.retard = False
         self.angle = angle
         self.angle_vel = 0
         self.image = image
@@ -97,10 +104,32 @@ class Ship:
         self.radius = info.get_radius()
         
     def draw(self,canvas):
-        canvas.draw_circle(self.pos, self.radius, 1, "White", "White")
+        canvas.draw_image(self.image, self.image_center, self.image_size, self.pos, self.image_size, self.angle)
+
 
     def update(self):
-        pass
+        global acceleration
+        global rotate_speed
+        global friction_ratio
+        global retard_ratio
+        global WIDTH
+        global HEIGHT
+
+        if self.thrust:
+            forward = angle_to_vector(self.angle)
+            self.vel[0] = (1-friction_ratio)*self.vel[0] + acceleration*forward[0]
+            self.vel[1] = (1-friction_ratio)*self.vel[1] + acceleration*forward[1]
+        elif self.retard:
+            self.vel[0] = self.vel[0]*(1-friction_ratio-retard_ratio)
+            self.vel[1] = self.vel[1]*(1-friction_ratio-retard_ratio)
+        else:
+            self.vel[0] = self.vel[0]*(1-friction_ratio)
+            self.vel[1] = self.vel[1]*(1-friction_ratio)
+
+        self.angle += self.angle_vel
+        self.pos[0] = (self.pos[0]+self.vel[0]+WIDTH)%WIDTH
+        self.pos[1] = (self.pos[1]+self.vel[1]+HEIGHT)%HEIGHT
+
     
     
 # Sprite class
@@ -122,10 +151,12 @@ class Sprite:
             sound.play()
    
     def draw(self, canvas):
-        canvas.draw_circle(self.pos, self.radius, 1, "Red", "Red")
+        canvas.draw_image(self.image, self.image_center, self.image_size, self.pos, self.image_size, self.angle)
     
     def update(self):
-        pass        
+        self.angle += self.angle_vel
+        # self.pos[0]+=self.vel[0]
+        # self.pos[1]+=self.vel[1]
 
            
 def draw(canvas):
@@ -152,27 +183,47 @@ def draw(canvas):
             
 # timer handler that spawns a rock    
 def rock_spawner():
-    pass
+    x = random.randint(0,WIDTH+1)
+    y = random.randint(0,HEIGHT+1)
+    a_rock.pos = [x,y]
 
 def keydown_handler(key):
     if chr(key)=='&':
         #up
-        pass
+        my_ship.thrust = True
     elif chr(key)=='(':
         #down
-        pass
+        my_ship.retard = True
     elif chr(key)=='%':
         #left
-        pass
+        my_ship.angle_vel = -0.1
     elif chr(key)=='\'':
         #right
-        pass
-    elif chr(key)=' ':
-        #space
+        my_ship.angle_vel = 0.1
+    elif chr(key)==' ':
+        #space TODO
         pass
     else:
         pass
     
+def keyup_handler(key):
+    if chr(key)=='&':
+        #up
+        my_ship.thrust = False
+    elif chr(key)=='(':
+        #down
+        my_ship.retard = False
+    elif chr(key)=='%':
+        #left
+        my_ship.angle_vel=0
+    elif chr(key)=='\'':
+        #right
+        my_ship.angle_vel = 0
+    elif chr(key)==' ':
+        #space TODO
+        pass
+    else:
+        pass
     
     
 # initialize frame
@@ -180,12 +231,13 @@ frame = simplegui.create_frame("Asteroids", WIDTH, HEIGHT)
 
 # initialize ship and two sprites
 my_ship = Ship([WIDTH / 2, HEIGHT / 2], [0, 0], 0, ship_image, ship_info)
-a_rock = Sprite([WIDTH / 3, HEIGHT / 3], [1, 1], 0, 0, asteroid_image, asteroid_info)
+a_rock = Sprite([WIDTH / 3, HEIGHT / 3], [1, 1], 0, 0.1, asteroid_image, asteroid_info)
 a_missile = Sprite([2 * WIDTH / 3, 2 * HEIGHT / 3], [-1,1], 0, 0, missile_image, missile_info, missile_sound)
 
 # register handlers
 frame.set_draw_handler(draw)
 frame.set_keydown_handler(keydown_handler)
+frame.set_keyup_handler(keyup_handler)
 
 timer = simplegui.create_timer(1000.0, rock_spawner)
 
