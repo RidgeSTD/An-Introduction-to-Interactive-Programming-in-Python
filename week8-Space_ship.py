@@ -76,6 +76,7 @@ explosion_image = simplegui.load_image("http://commondatastorage.googleapis.com/
 # sound assets purchased from sounddogs.com, please do not redistribute
 # .ogg versions of sounds are also available, just replace .mp3 by .ogg
 soundtrack = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/soundtrack.mp3")
+# soundtrack = simplegui.load_sound("http://lx.cdn.baidupcs.com/file/f11c3ef4836f483c0615623a2e91e40e?bkt=p2-nj-483&xcode=42c6f91464a2acdd94a9947a26e95aebd2cf741278840c4e6d7e9d37fc40c58e&fid=2953674213-250528-468443053188654&time=1415897910&sign=FDTAXERLB-DCb740ccc5511e5e8fedcff06b081203-SDUy7ZyCsMIuAbXk3RcxezHr%2Bfw%3D&to=sc&fm=Nan,B,U,nc&sta_dx=3&sta_cs=414&sta_ft=mp3&sta_ct=0&newver=1&newfm=1&flow_ver=3&sl=81723486&expires=8h&rt=sh&r=259011803&mlogid=1963161765&vuk=2953674213&vbdid=789803841&fin=Teaser_musicmp3.mp3&fn=Teaser_musicmp3.mp3")
 missile_sound = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/missile.mp3")
 missile_sound.set_volume(.5)
 ship_thrust_sound = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/thrust.mp3")
@@ -264,6 +265,8 @@ def draw(canvas):
             if dist(each_missile.get_pos(), each_rock.get_pos())<=40:
                 missile_set.remove(each_missile)
                 rock_set.remove(each_rock)
+                explosion_sound.rewind()
+                explosion_sound.play()
                 score += 1
                 break
 
@@ -271,6 +274,8 @@ def draw(canvas):
         if dist(my_ship.get_pos(), each_rock.get_pos())<= 70:
             lives -= 1
             rock_set.remove(each_rock)
+            explosion_sound.rewind()
+            explosion_sound.play()
             if lives<1:
                 reset(1)
                 started = False
@@ -301,6 +306,8 @@ def reset(step):
     if step==2:
         score = 0
         lives = 3
+        soundtrack.rewind()
+        soundtrack.play()
     else:
         for each in rock_set:
             rock_set.remove(each)
