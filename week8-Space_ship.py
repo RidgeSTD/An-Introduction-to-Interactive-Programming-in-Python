@@ -102,6 +102,9 @@ class Ship:
         self.image_center = info.get_center()
         self.image_size = info.get_size()
         self.radius = info.get_radius()
+
+    def get_pos(self):
+        return self.pos
         
     def draw(self,canvas):
         if self.thrust:
@@ -110,7 +113,6 @@ class Ship:
         else:
             canvas.draw_image(self.image, self.image_center, self.image_size,
                               self.pos, self.image_size, self.angle)
-        # canvas.draw_circle(self.pos, self.radius, 1, "White", "White")
 
     def update(self):
         # update angle
@@ -149,7 +151,6 @@ class Ship:
         missile_pos = [self.pos[0] + self.radius * forward[0], self.pos[1] + self.radius * forward[1]]
         missile_vel = [self.vel[0] + 6 * forward[0], self.vel[1] + 6 * forward[1]]
         missile_info = ImageInfo([5,5], [10, 10], 3, time+60)
-        print('shoot a missile dies at '+str(time+60))
         missile_set.add(Sprite(missile_pos, missile_vel, self.angle, 0, missile_image, missile_info, missile_sound))
     
     
@@ -174,6 +175,9 @@ class Sprite:
 
     def get_lifespan(self):
         return self.lifespan
+
+    def get_pos(self):
+        return self.pos
    
     def draw(self, canvas):
         canvas.draw_image(self.image, self.image_center, self.image_size,
@@ -215,10 +219,11 @@ def click(pos):
     inwidth = (center[0] - size[0] / 2) < pos[0] < (center[0] + size[0] / 2)
     inheight = (center[1] - size[1] / 2) < pos[1] < (center[1] + size[1] / 2)
     if (not started) and inwidth and inheight:
+        reset(2)
         started = True
 
 def draw(canvas):
-    global time, started, rock_set
+    global time, started, rock_set, missile_set, score, lives
     
     # animiate background
     time += 1
@@ -252,7 +257,24 @@ def draw(canvas):
             each_missile.update()
         else:
             missile_set.remove(each_missile)
-            print("a missile with lifespan of "+str(each_missile.get_lifespan())+" died at "+str(time))
+
+    # judge the collision info
+    for each_rock in rock_set:
+        for each_missile in missile_set:
+            if dist(each_missile.get_pos(), each_rock.get_pos())<=40:
+                missile_set.remove(each_missile)
+                rock_set.remove(each_rock)
+                score += 1
+                break
+
+    for each_rock in rock_set:
+        if dist(my_ship.get_pos(), each_rock.get_pos())<= 70:
+            lives -= 1
+            rock_set.remove(each_rock)
+            if lives<1:
+                reset(1)
+                started = False
+
 
     # draw splash screen if not started
     if not started:
@@ -264,13 +286,26 @@ def draw(canvas):
 def rock_spawner():
     # global a_rock
     global rock_set
-    if started:
+    if started and len(rock_set)<12:
         rock_pos = [random.randrange(0, WIDTH), random.randrange(0, HEIGHT)]
         rock_vel = [random.random() * .6 - .3, random.random() * .6 - .3]
         rock_avel = random.random() * .2 - .1
         rock_set.add(Sprite(rock_pos, rock_vel, 0, rock_avel, asteroid_image, asteroid_info))
     else:
         pass
+
+def reset(step):
+    # pass
+    global rock_setset, missile_set, score, lives
+    time = 0
+    if step==2:
+        score = 0
+        lives = 3
+    else:
+        for each in rock_set:
+            rock_set.remove(each)
+        for each in missile_set:
+            missile_set.remove(each)
             
 # initialize stuff
 frame = simplegui.create_frame("Asteroids", WIDTH, HEIGHT)
