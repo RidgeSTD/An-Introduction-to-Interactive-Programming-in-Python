@@ -12,6 +12,8 @@ time = 0
 started = False
 rock_set = set()
 missile_set = set()
+a_explosion = None
+explosion_center = 64
 
 class ImageInfo:
     def __init__(self, center, size, radius = 0, lifespan = None, animated = False):
@@ -147,7 +149,7 @@ class Ship:
         self.angle_vel -= .05
         
     def shoot(self):
-        global a_time, missile_set
+        global missile_set
         forward = angle_to_vector(self.angle)
         missile_pos = [self.pos[0] + self.radius * forward[0], self.pos[1] + self.radius * forward[1]]
         missile_vel = [self.vel[0] + 6 * forward[0], self.vel[1] + 6 * forward[1]]
@@ -179,6 +181,12 @@ class Sprite:
 
     def get_pos(self):
         return self.pos
+
+    def set_age(self, agee):
+        self.age = agee
+
+    def get_age(self):
+        return self.age
    
     def draw(self, canvas):
         canvas.draw_image(self.image, self.image_center, self.image_size,
@@ -187,6 +195,9 @@ class Sprite:
     def update(self):
         # update angle
         self.angle += self.angle_vel
+        if self.age>0 and self.age<25:
+            self.image_center[0] = 128*self.age + explosion_center
+            self.age += 1
         
         # update position
         self.pos[0] = (self.pos[0] + self.vel[0]) % WIDTH
@@ -224,7 +235,7 @@ def click(pos):
         started = True
 
 def draw(canvas):
-    global time, started, rock_set, missile_set, score, lives
+    global time, started, rock_set, missile_set, score, lives, a_explosion
     
     # animiate background
     time += 1
@@ -243,7 +254,8 @@ def draw(canvas):
 
     # draw ship and sprites
     my_ship.draw(canvas)
-    # a_rock.draw(canvas)
+    if not a_explosion == None:
+        a_explosion.draw(canvas)
     for each_rock in rock_set:
         each_rock.draw(canvas)
     for each_missile in missile_set:
@@ -251,6 +263,8 @@ def draw(canvas):
     
     # update ship and sprites
     my_ship.update()
+    if not a_explosion == None:
+        a_explosion.update()
     for each_rock in rock_set:
         each_rock.update()
     for each_missile in missile_set:
@@ -267,6 +281,9 @@ def draw(canvas):
                 rock_set.remove(each_rock)
                 explosion_sound.rewind()
                 explosion_sound.play()
+                # explosion animation
+                a_explosion = Sprite(each_rock.get_pos(), [0, 0], 0, 0, explosion_image, explosion_info)
+                a_explosion.set_age(1)
                 score += 1
                 break
 
@@ -276,6 +293,9 @@ def draw(canvas):
             rock_set.remove(each_rock)
             explosion_sound.rewind()
             explosion_sound.play()
+            # explosion animation
+            a_explosion = Sprite(each_rock.get_pos(), [0, 0], 0, 0, explosion_image, explosion_info)
+            a_explosion.set_age(1)
             if lives<1:
                 reset(1)
                 started = False
@@ -289,7 +309,6 @@ def draw(canvas):
 
 # timer handler that spawns a rock    
 def rock_spawner():
-    # global a_rock
     global rock_set
     if started and len(rock_set)<12:
         rock_pos = [random.randrange(0, WIDTH), random.randrange(0, HEIGHT)]
